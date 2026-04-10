@@ -1,5 +1,10 @@
+export const dynamic = "force-dynamic";
+
 import { cancelBooking } from "@/lib/booking-actions";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import type { Booking } from "@/lib/types";
+
+type BookingWithService = Booking & { services: { name: string } | null };
 
 export default async function CancelPage({
   params,
@@ -9,11 +14,13 @@ export default async function CancelPage({
   const { token } = await params;
 
   // Fetch booking info
-  const { data: booking } = await supabaseAdmin
+  const { data: bookingRaw } = await supabaseAdmin
     .from("bookings")
     .select("*, services(name)")
     .eq("cancel_token", token)
     .single();
+
+  const booking = bookingRaw as BookingWithService | null;
 
   if (!booking) {
     return (
@@ -64,7 +71,7 @@ export default async function CancelPage({
               Rendez-vous annulé
             </h1>
             <p style={{ color: "var(--color-muted)" }}>
-              Votre rendez-vous pour {(booking as any).services?.name || "votre service"} a été annulé avec succès.
+              Votre rendez-vous pour {booking.services?.name || "votre service"} a été annulé avec succès.
             </p>
           </>
         ) : (
