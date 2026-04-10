@@ -19,6 +19,7 @@ export const salonInfo = {
   googleMapsEmbed:
     "https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=Zylane+Coiffeur+Barbier+Le+Mont-sur-Lausanne&zoom=15",
   calLink: "",
+  formspreeId: "",
 };
 
 export const hours = [

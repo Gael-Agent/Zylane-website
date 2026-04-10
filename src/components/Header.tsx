@@ -38,13 +38,6 @@ export default function Header() {
                 {link.label}
               </a>
             ))}
-            <a
-              href="tel:+41216523227"
-              className="text-base font-medium min-h-[48px] flex items-center transition-opacity hover:opacity-80"
-              style={{ color: "var(--color-accent)" }}
-            >
-              📞 {salonInfo.phoneDisplay}
-            </a>
           </nav>
 
           <button
@@ -78,13 +71,6 @@ export default function Header() {
                   {link.label}
                 </a>
               ))}
-              <a
-                href="tel:+41216523227"
-                className="text-lg py-3 px-4 rounded-lg font-medium min-h-[48px] flex items-center"
-                style={{ color: "var(--color-accent)" }}
-              >
-                📞 Appeler: {salonInfo.phoneDisplay}
-              </a>
             </div>
           </nav>
         )}

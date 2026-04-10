@@ -18,13 +18,6 @@ export default function Footer() {
             >
               Instagram
             </a>
-            <a
-              href="tel:+41216523227"
-              className="transition-colors min-h-[48px] flex items-center hover:text-[var(--color-accent)]"
-              style={{ color: "var(--color-muted)" }}
-            >
-              {salonInfo.phoneDisplay}
-            </a>
           </div>
         </div>
       </div>
