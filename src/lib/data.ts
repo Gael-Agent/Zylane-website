@@ -17,7 +17,7 @@ export const salonInfo = {
   instagram: "https://www.instagram.com/zylane_coiffure/",
   instagramHandle: "@zylane_coiffure",
   googleMapsEmbed:
-    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2744.8!2d6.6277!3d46.5558!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x478c2e3e1b1b1b1b%3A0x1b1b1b1b1b1b1b1b!2sRoute%20du%20Grand-Mont%2016%2C%201052%20Le%20Mont-sur-Lausanne!5e0!3m2!1sfr!2sch!4v1700000000000!5m2!1sfr!2sch",
+    "https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=Zylane+Coiffeur+Barbier+Le+Mont-sur-Lausanne&zoom=15",
   calLink: "",
 };
 
