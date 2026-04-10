@@ -1,211 +1,172 @@
 "use client";
 
-import { useState, FormEvent } from "react";
-import { salonInfo, serviceCategories } from "@/lib/data";
+import { useState, useEffect } from "react";
+import { getServices, createBooking } from "@/lib/booking-actions";
+import type { Service, TimeSlot } from "@/lib/types";
+import StepService from "@/components/booking/StepService";
+import StepDateTime from "@/components/booking/StepDateTime";
+import StepDetails from "@/components/booking/StepDetails";
+import StepConfirm from "@/components/booking/StepConfirm";
+
+type Step = "service" | "datetime" | "details" | "confirm";
 
 export default function Booking() {
-  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [step, setStep] = useState<Step>("service");
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  // Build flat list of services from categories
-  const allServices = serviceCategories.flatMap((cat) =>
-    cat.services.map((s) => `${cat.title} — ${s.name}`)
-  );
+  // Selected values
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
 
-  // Get tomorrow's date as min for date input
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = tomorrow.toISOString().split("T")[0];
+  useEffect(() => {
+    getServices()
+      .then(setServices)
+      .catch(() => setServices([]))
+      .finally(() => setLoading(false));
+  }, []);
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setStatus("submitting");
+  function reset() {
+    setStep("service");
+    setSelectedService(null);
+    setSelectedDate("");
+    setSelectedSlot(null);
+    setError("");
+  }
 
-    if (!salonInfo.formspreeId) {
-      // No Formspree configured — show placeholder message
-      setStatus("error");
-      return;
-    }
+  async function handleBooking(clientName: string, clientContact: string) {
+    if (!selectedService || !selectedSlot || !selectedDate) return;
+    setSubmitting(true);
+    setError("");
 
-    const formData = new FormData(e.currentTarget);
+    const result = await createBooking({
+      serviceId: selectedService.id,
+      date: selectedDate,
+      startTime: selectedSlot.start,
+      endTime: selectedSlot.end,
+      workerId: selectedSlot.worker_id,
+      clientName,
+      clientContact,
+    });
 
-    try {
-      const res = await fetch(`https://formspree.io/f/${salonInfo.formspreeId}`, {
-        method: "POST",
-        body: formData,
-        headers: { Accept: "application/json" },
-      });
-      if (res.ok) {
-        setStatus("success");
-      } else {
-        setStatus("error");
-      }
-    } catch {
-      setStatus("error");
+    setSubmitting(false);
+    if (result.success) {
+      setStep("confirm");
+    } else {
+      setError(result.error || "Erreur inconnue");
     }
   }
 
-  if (status === "success") {
-    return (
-      <section id="reserver" className="py-20 sm:py-28" style={{ background: "var(--color-bg)" }}>
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
-          <div className="rounded-2xl p-8 sm:p-12 border" style={{ background: "var(--color-card-bg)", borderColor: "var(--color-border)" }}>
-            <div className="text-5xl mb-6">✓</div>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4" style={{ color: "var(--color-foreground)", fontFamily: "var(--heading-font)" }}>
-              Demande envoyée !
-            </h2>
-            <p className="text-lg" style={{ color: "var(--color-muted)" }}>
-              Nous vous contacterons rapidement pour confirmer votre rendez-vous.
-            </p>
-            <button
-              onClick={() => setStatus("idle")}
-              className="mt-8 px-6 py-3 rounded-lg text-white font-semibold min-h-[48px] hover:opacity-90 transition-opacity"
-              style={{ background: "var(--color-accent)" }}
-            >
-              Nouvelle demande
-            </button>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const stepLabels: Record<Step, string> = {
+    service: "1. Service",
+    datetime: "2. Date & heure",
+    details: "3. Vos coordonnées",
+    confirm: "✓ Confirmé",
+  };
+
+  const steps: Step[] = ["service", "datetime", "details", "confirm"];
+  const currentIdx = steps.indexOf(step);
 
   return (
     <section id="reserver" className="py-20 sm:py-28" style={{ background: "var(--color-bg)" }}>
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4" style={{ color: "var(--color-foreground)", fontFamily: "var(--heading-font)" }}>
+          <h2
+            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4"
+            style={{ color: "var(--color-foreground)", fontFamily: "var(--heading-font)" }}
+          >
             Prendre rendez-vous
           </h2>
           <div className="w-16 h-[2px] mx-auto mb-4" style={{ background: "var(--color-accent)" }} />
-          <p className="text-lg" style={{ color: "var(--color-muted)" }}>
-            Remplissez le formulaire et nous vous confirmerons votre créneau
-          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="rounded-2xl p-6 sm:p-8 border space-y-6" style={{ background: "var(--color-card-bg)", borderColor: "var(--color-border)" }}>
-          {/* Service */}
-          <div>
-            <label htmlFor="service" className="block text-base font-medium mb-2" style={{ color: "var(--color-foreground)" }}>
-              Service souhaité
-            </label>
-            <select
-              id="service"
-              name="service"
-              required
-              className="w-full rounded-lg px-4 min-h-[48px] border text-base"
-              style={{ background: "var(--color-bg)", color: "var(--color-foreground)", borderColor: "var(--color-border)" }}
-            >
-              <option value="">Choisir un service...</option>
-              {allServices.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+        {/* Progress indicator */}
+        {step !== "confirm" && (
+          <div className="flex items-center justify-center gap-2 mb-8">
+            {steps.slice(0, 3).map((s, i) => (
+              <div key={s} className="flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                  style={{
+                    background: i <= currentIdx ? "var(--color-accent)" : "var(--color-border)",
+                    color: i <= currentIdx ? "white" : "var(--color-muted)",
+                  }}
+                >
+                  {i + 1}
+                </div>
+                {i < 2 && (
+                  <div
+                    className="w-8 h-[2px]"
+                    style={{ background: i < currentIdx ? "var(--color-accent)" : "var(--color-border)" }}
+                  />
+                )}
+              </div>
+            ))}
           </div>
+        )}
 
-          {/* Date + Time row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="date" className="block text-base font-medium mb-2" style={{ color: "var(--color-foreground)" }}>
-                Date souhaitée
-              </label>
-              <input
-                type="date"
-                id="date"
-                name="date"
-                required
-                min={minDate}
-                className="w-full rounded-lg px-4 min-h-[48px] border text-base"
-                style={{ background: "var(--color-bg)", color: "var(--color-foreground)", borderColor: "var(--color-border)" }}
-              />
-            </div>
-            <div>
-              <label htmlFor="time" className="block text-base font-medium mb-2" style={{ color: "var(--color-foreground)" }}>
-                Heure préférée
-              </label>
-              <select
-                id="time"
-                name="time"
-                required
-                className="w-full rounded-lg px-4 min-h-[48px] border text-base"
-                style={{ background: "var(--color-bg)", color: "var(--color-foreground)", borderColor: "var(--color-border)" }}
-              >
-                <option value="">Choisir...</option>
-                <option value="Matin (8h30-12h)">Matin (8h30–12h)</option>
-                <option value="Début après-midi (12h-15h)">Début d&apos;après-midi (12h–15h)</option>
-                <option value="Fin après-midi (15h-18h30)">Fin d&apos;après-midi (15h–18h30)</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Name */}
-          <div>
-            <label htmlFor="name" className="block text-base font-medium mb-2" style={{ color: "var(--color-foreground)" }}>
-              Votre nom
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              required
-              placeholder="Prénom et nom"
-              className="w-full rounded-lg px-4 min-h-[48px] border text-base"
-              style={{ background: "var(--color-bg)", color: "var(--color-foreground)", borderColor: "var(--color-border)" }}
-            />
-          </div>
-
-          {/* Contact */}
-          <div>
-            <label htmlFor="contact" className="block text-base font-medium mb-2" style={{ color: "var(--color-foreground)" }}>
-              Téléphone ou email
-            </label>
-            <input
-              type="text"
-              id="contact"
-              name="contact"
-              required
-              placeholder="Pour vous confirmer le rendez-vous"
-              className="w-full rounded-lg px-4 min-h-[48px] border text-base"
-              style={{ background: "var(--color-bg)", color: "var(--color-foreground)", borderColor: "var(--color-border)" }}
-            />
-          </div>
-
-          {/* Message */}
-          <div>
-            <label htmlFor="message" className="block text-base font-medium mb-2" style={{ color: "var(--color-foreground)" }}>
-              Message <span style={{ color: "var(--color-muted)" }}>(optionnel)</span>
-            </label>
-            <textarea
-              id="message"
-              name="message"
-              rows={3}
-              placeholder="Précisions, demandes particulières..."
-              className="w-full rounded-lg px-4 py-3 border text-base resize-none"
-              style={{ background: "var(--color-bg)", color: "var(--color-foreground)", borderColor: "var(--color-border)" }}
-            />
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={status === "submitting"}
-            className="w-full py-4 rounded-lg text-white text-lg font-semibold min-h-[56px] hover:opacity-90 transition-opacity disabled:opacity-50"
-            style={{ background: "var(--color-accent)" }}
-          >
-            {status === "submitting" ? "Envoi en cours..." : "Envoyer la demande"}
-          </button>
-
-          {status === "error" && !salonInfo.formspreeId && (
-            <p className="text-center text-base" style={{ color: "var(--color-muted)" }}>
-              La réservation en ligne sera bientôt disponible. En attendant, passez directement au salon au {salonInfo.address.street}, {salonInfo.address.city}.
+        <div
+          className="rounded-2xl p-6 sm:p-8 border"
+          style={{ background: "var(--color-card-bg)", borderColor: "var(--color-border)" }}
+        >
+          {loading && (
+            <p className="text-center py-8" style={{ color: "var(--color-muted)" }}>
+              Chargement des services...
             </p>
           )}
 
-          {status === "error" && salonInfo.formspreeId && (
-            <p className="text-center text-base text-red-400">
-              Une erreur est survenue. Veuillez réessayer ou passer directement au salon.
+          {!loading && services.length === 0 && (
+            <p className="text-center py-8" style={{ color: "var(--color-muted)" }}>
+              Le système de réservation sera bientôt disponible. En attendant, passez directement au salon.
             </p>
           )}
-        </form>
+
+          {!loading && services.length > 0 && (
+            <>
+              {step === "service" && (
+                <StepService
+                  services={services}
+                  onSelect={(s) => {
+                    setSelectedService(s);
+                    setStep("datetime");
+                  }}
+                />
+              )}
+
+              {step === "datetime" && selectedService && (
+                <StepDateTime
+                  service={selectedService}
+                  onSelect={(date, slot) => {
+                    setSelectedDate(date);
+                    setSelectedSlot(slot);
+                    setStep("details");
+                  }}
+                  onBack={() => setStep("service")}
+                />
+              )}
+
+              {step === "details" && selectedService && selectedSlot && (
+                <StepDetails
+                  service={selectedService}
+                  date={selectedDate}
+                  slot={selectedSlot}
+                  onSubmit={handleBooking}
+                  onBack={() => setStep("datetime")}
+                  submitting={submitting}
+                />
+              )}
+
+              {step === "confirm" && <StepConfirm onReset={reset} />}
+
+              {error && (
+                <p className="text-center mt-4 text-red-400 text-base">{error}</p>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </section>
   );
