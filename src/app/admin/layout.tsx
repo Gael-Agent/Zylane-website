@@ -1,41 +1,6 @@
-import { isAdminAuthenticated, adminLogin } from "@/lib/admin-actions";
+import { isAdminAuthenticated } from "@/lib/admin-actions";
 import { redirect } from "next/navigation";
-
-async function LoginForm() {
-  async function handleLogin(formData: FormData) {
-    "use server";
-    const password = formData.get("password") as string;
-    const success = await adminLogin(password);
-    if (success) redirect("/admin");
-  }
-
-  return (
-    <main className="min-h-screen flex items-center justify-center" style={{ background: "var(--color-bg)" }}>
-      <div className="w-full max-w-sm p-8 rounded-2xl border" style={{ background: "var(--color-card-bg)", borderColor: "var(--color-border)" }}>
-        <h1 className="text-2xl font-bold mb-6 text-center" style={{ color: "var(--color-foreground)", fontFamily: "var(--heading-font)" }}>
-          Administration
-        </h1>
-        <form action={handleLogin}>
-          <input
-            type="password"
-            name="password"
-            placeholder="Mot de passe"
-            required
-            className="w-full rounded-lg px-4 min-h-[48px] border text-base mb-4"
-            style={{ background: "var(--color-bg)", color: "var(--color-foreground)", borderColor: "var(--color-border)" }}
-          />
-          <button
-            type="submit"
-            className="w-full py-3 rounded-lg text-white font-semibold min-h-[48px]"
-            style={{ background: "var(--color-accent)" }}
-          >
-            Connexion
-          </button>
-        </form>
-      </div>
-    </main>
-  );
-}
+import LoginForm from "./LoginForm";
 
 export default async function AdminLayout({
   children,
