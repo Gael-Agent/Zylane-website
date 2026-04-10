@@ -24,7 +24,7 @@ insert into services (name, category, duration_minutes, price_display) values
 -- Schedules (Tue-Sat for worker 1, Tue/Thu/Fri/Sat for worker 2)
 -- Worker 1: Gülsen
 insert into schedules (worker_id, day_of_week, start_time, end_time)
-select w.id, s.dow, s.st, s.et
+select w.id, s.dow, s.st::time, s.et::time
 from workers w,
   (values (2, '08:30', '18:30'), (3, '08:30', '12:00'), (4, '08:30', '18:30'),
           (5, '08:30', '18:30'), (6, '08:30', '14:00')) as s(dow, st, et)
@@ -32,7 +32,7 @@ where w.name = 'Gülsen';
 
 -- Worker 2
 insert into schedules (worker_id, day_of_week, start_time, end_time)
-select w.id, s.dow, s.st, s.et
+select w.id, s.dow, s.st::time, s.et::time
 from workers w,
   (values (2, '08:30', '18:30'), (4, '08:30', '18:30'),
           (5, '08:30', '18:30'), (6, '08:30', '14:00')) as s(dow, st, et)
