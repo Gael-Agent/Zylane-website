@@ -1,4 +1,4 @@
-export const THEME = "dark" as "dark" | "light";
+export const THEME = "light" as "dark" | "light";
 
 export const salonInfo = {
   name: "Zylane",
