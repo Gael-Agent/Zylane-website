@@ -2,7 +2,7 @@
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Service, Worker, Schedule, Booking, TimeSlot } from "@/lib/types";
-import { sendBookingConfirmation, sendWorkerNotification } from "@/lib/email";
+import { sendBookingConfirmation } from "@/lib/email";
 
 export async function getServices(): Promise<Service[]> {
   const { data, error } = await supabaseAdmin
@@ -136,7 +136,7 @@ export async function createBooking(data: {
       client_name: data.clientName,
       client_contact: data.clientContact,
     })
-    .select("*, workers(name, email), services(name)")
+    .select("*, workers(name), services(name)")
     .single();
 
   if (error) {
@@ -156,19 +156,6 @@ export async function createBooking(data: {
         startTime: data.startTime,
         workerName: (booking as any).workers?.name || "",
         cancelUrl: `${siteUrl}/cancel/${booking.cancel_token}`,
-      });
-    }
-    // Email to worker
-    const workerEmail = (booking as any).workers?.email;
-    if (workerEmail) {
-      await sendWorkerNotification({
-        to: workerEmail,
-        workerName: (booking as any).workers?.name || "",
-        clientName: data.clientName,
-        clientContact: data.clientContact,
-        serviceName: (booking as any).services?.name || "",
-        date: data.date,
-        startTime: data.startTime,
       });
     }
   } catch {

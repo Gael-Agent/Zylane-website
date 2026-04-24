@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY ?? "re_placeholder");
 
-const FROM = "Zylane Coiffeur <onboarding@resend.dev>"; // Change to custom domain later
+const FROM = "Zylane Coiffeur <noreply@zylanecoiffure.com>";
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00");
@@ -52,32 +52,3 @@ export async function sendBookingConfirmation(params: {
   });
 }
 
-export async function sendWorkerNotification(params: {
-  to: string;
-  workerName: string;
-  clientName: string;
-  clientContact: string;
-  serviceName: string;
-  date: string;
-  startTime: string;
-}) {
-  await resend.emails.send({
-    from: FROM,
-    to: [params.to],
-    subject: `Nouveau RDV — ${params.clientName} le ${formatDate(params.date)}`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-        <h2 style="color: #1a1a2e;">Nouveau rendez-vous</h2>
-        <p>Bonjour ${params.workerName},</p>
-        <p>Vous avez un nouveau rendez-vous :</p>
-        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
-          <tr><td style="padding: 8px; color: #666;">Client</td><td style="padding: 8px; font-weight: bold;">${params.clientName}</td></tr>
-          <tr><td style="padding: 8px; color: #666;">Contact</td><td style="padding: 8px; font-weight: bold;">${params.clientContact}</td></tr>
-          <tr><td style="padding: 8px; color: #666;">Service</td><td style="padding: 8px; font-weight: bold;">${params.serviceName}</td></tr>
-          <tr><td style="padding: 8px; color: #666;">Date</td><td style="padding: 8px; font-weight: bold;">${formatDate(params.date)}</td></tr>
-          <tr><td style="padding: 8px; color: #666;">Heure</td><td style="padding: 8px; font-weight: bold;">${formatTime(params.startTime)}</td></tr>
-        </table>
-      </div>
-    `,
-  });
-}
